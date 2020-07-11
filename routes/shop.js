@@ -1,10 +1,13 @@
-const express = require ("express");
+const path = require("path");
+
+const express = require("express");
 
 const router = express.Router();
 
 // .get will do exact match but .use will handle any incoming method
 router.get("/", (req, res, next) => {
-  res.send("<h1>Hello from express</h1>");
+  // __dirname is a variable provided by node, it hold the absolute path this file - always use it instead of absolute path
+  res.sendFile(path.join(__dirname, "../", "views", "shop.html"));
 });
 
 module.exports = router;
