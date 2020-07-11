@@ -1,19 +1,22 @@
-const http = require("http");
-
 const express = require("express");
 
 const app = express();
 
-//below func is middleware
-app.use((req, res, next) => {
-  console.log("In the middleware");
-  next();
+// middleware
+
+app.use("/", (req, res, next) => {
+  console.log("this always runs");
+  next(); // Allows to execute next middleware
 });
 
-//without next function in above middleware, below middleware will not be called
-app.use((req, res, next) => {
+app.use("/add-product", (req, res, next) => {
   console.log("In the next middleware");
+  res.send(`<h1>The "Add product" Page </h1>`);
 });
 
-const server = http.createServer(app);
-server.listen(3000);
+app.use("/", (req, res, next) => {
+  console.log("In the next middleware");
+  res.send("<h1>Hello from express</h1>");
+});
+
+app.listen(3000);
