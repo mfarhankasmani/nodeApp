@@ -1,0 +1,14 @@
+{
+  "name": "nodejs-app",
+  "version": "1.0.0",
+  "main": "app.js",
+  "repository": "https://github.com/mfarhankasmani/nodeApp.git",
+  "author": "Farhan <farhankasmani@live.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
