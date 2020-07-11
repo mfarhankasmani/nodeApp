@@ -9,7 +9,8 @@ const shopRouter = require('./routes/shop')
 
 app.use(bodyParser.urlencoded()); // parse body of the response (it will not parse files)
 
-app.use(adminRouter);
+// common path can be added on top level
+app.use('/admin',adminRouter);
 app.use(shopRouter)
 
 app.use((req, res, next) => {
