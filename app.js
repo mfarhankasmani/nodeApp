@@ -4,6 +4,11 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
 
+//setting global template to pug 
+app.set('view engine', 'pug');
+//set view folder. by default it is set to src/views
+app.set('views', 'views');
+
 const adminData = require("./routes/admin");
 const shopRouter = require("./routes/shop");
 const rootDir = require("./util/path");
@@ -18,7 +23,7 @@ app.use("/admin", adminData.routes);
 app.use(shopRouter);
 
 app.use((req, res, next) => {
-  res.status(404).sendFile(path.join(rootDir, "views", "404.html"));
+  res.status(404).render('404')
 });
 
 app.listen(3000);

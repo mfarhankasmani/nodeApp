@@ -9,10 +9,9 @@ const router = express.Router();
 
 // .get will do exact match but .use will handle any incoming method
 router.get("/", (req, res, next) => {
-  // array product holds the data on node server level. hence data is shared between all the user and requests
-  console.log(adminData.products);
-  // __dirname is a variable provided by node, it hold the absolute path this file - always use it instead of absolute path
-  res.sendFile(path.join(rootDir, "views", "shop.html"));
+  // we have set the location globally, hence there is no need to provide full path now
+  // we can pass parameter to pug file as js object
+  res.render("shop", { products: adminData.products, docTitle: 'My Shop' });
 });
 
 module.exports = router;
