@@ -4,8 +4,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
 
-//setting global template to pug 
-app.set('view engine', 'pug');
+//setting global template to ejs 
+app.set('view engine', 'ejs');
 //set view folder. by default it is set to src/views
 app.set('views', 'views');
 
@@ -23,7 +23,7 @@ app.use("/admin", adminData.routes);
 app.use(shopRouter);
 
 app.use((req, res, next) => {
-  res.status(404).render('404')
+  res.status(404).render('404', {pageTitle: 'Page Not Found'})
 });
 
 app.listen(3000);
