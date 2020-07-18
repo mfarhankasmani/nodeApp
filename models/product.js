@@ -1,35 +1,45 @@
 const fs = require("fs");
 const path = require("path");
 
-const rootDir = require("../util/path");
+const rootPath = require("../util/path");
 
-const p = path.join(rootDir, "data", "products.json");
+const p = path.join(rootPath, "data", "products.json");
 
 const getProductsFromFile = (callBack) => {
   fs.readFile(p, (err, fileContent) => {
     if (err) {
-      return callBack([]);
+      callBack([]);
+    } else {
+      callBack(JSON.parse(fileContent));
     }
-    callBack(JSON.parse(fileContent));
   });
 };
 
 module.exports = class Product {
-  constructor(title) {
+  constructor(title, imageUrl, description, price) {
     this.title = title;
+    this.imageUrl = imageUrl;
+    this.description = description;
+    this.price = price;
   }
 
   save() {
+    this.id = Math.random().toString();
     getProductsFromFile((products) => {
       products.push(this);
       fs.writeFile(p, JSON.stringify(products), (err) => {
-        console.log({ err });
+        console.log(err);
       });
     });
   }
 
-  // static methods can directly be called on class object, no need for instantiate the class (new key word)
-  static fetchAll(callBack) {
-    getProductsFromFile(callBack);
+  static fetchAll(cb) {
+    getProductsFromFile(cb);
+  }
+
+  static findById(id, cb) {
+    getProductsFromFile((products) =>
+      cb(products.find((product) => product.id === id))
+    );
   }
 };
