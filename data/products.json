@@ -1,1 +1,16 @@
-[{"title":"Book 3","imageUrl":"https://cdn.pixabay.com/photo/2016/03/31/20/51/book-1296045_960_720.png","description":"This is a very good book","price":"15","id":"0.4110481467550542"},{"id":"0.7919529932888454","title":"Book 1","imageUrl":"https://cdn.pixabay.com/photo/2016/03/31/20/51/book-1296045_960_720.png","description":"Some random book for you\r\n","price":"10"}]
+[
+  {
+    "title": "Book 3",
+    "imageUrl": "https://cdn.pixabay.com/photo/2016/03/31/20/51/book-1296045_960_720.png",
+    "description": "This is a very good book",
+    "price": "15",
+    "id": "0.4110481467550542"
+  },
+  {
+    "id": "0.7919529932888454",
+    "title": "Book 1",
+    "imageUrl": "https://cdn.pixabay.com/photo/2016/03/31/20/51/book-1296045_960_720.png",
+    "description": "Some random book for you\r\n",
+    "price": "10"
+  }
+]
