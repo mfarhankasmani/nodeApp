@@ -4,7 +4,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 
 const errorController = require("./controllers/error");
-const sequelise = require("./util/database");
+const sequelise = require("./util/database.js");
 
 const app = express();
 

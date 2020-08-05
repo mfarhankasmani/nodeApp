@@ -1,12 +1,8 @@
-import { Model, ModelDefined } from "sequelize/types";
-import { SequelizeMethod } from "sequelize/types/lib/utils";
+const Sequelize = require("sequelize");
 
-const Sequelize  = require("sequelize");
-//const { Sequelize } = require("sequelize");
+const sequelize = require("../util/database.js");
 
-const sequelize = require("../util/database");
-
-const Product: Model = sequelize.define("product", {
+const Product = sequelize.define("product", {
   id: {
     type: Sequelize.INTEGER,
     autoIncrement: true,

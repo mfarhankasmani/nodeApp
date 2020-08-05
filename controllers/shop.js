@@ -2,7 +2,7 @@ const Product = require("../models/product");
 const Cart = require("../models/cart");
 
 exports.getProducts = (req, res, next) => {
-    Product.findAll()
+  Product.findAll()
     .then((products) => {
       res.render("shop/product-list", {
         prods: products,
@@ -16,15 +16,23 @@ exports.getProducts = (req, res, next) => {
 exports.getProduct = (req, res, next) => {
   // param name should same as the name used in route
   const prodId = req.params.productId;
-  Product.findByPk(prodId)
-    .then((product) => {
-      res.render("shop/product-detail.ejs", {
-        pageTitle: product.title,
-        path: `/products`,
-        product,
-      });
-    })
-    .catch((err) => console.log(err));
+  //find all always returns an array
+  Product.findAll({ where: { id: prodId } }).then(products => {
+    res.render("shop/product-detail.ejs", {
+      pageTitle: products[0].title,
+      path: `/products`,
+      product: products[0],
+    });
+  }).catch((err) => console.log(err));
+  // Product.findByPk(prodId)
+  //   .then((product) => {
+  //     res.render("shop/product-detail.ejs", {
+  //       pageTitle: product.title,
+  //       path: `/products`,
+  //       product,
+  //     });
+  //   })
+  //   .catch((err) => console.log(err));
 };
 
 exports.getIndex = (req, res, next) => {
