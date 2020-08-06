@@ -7,6 +7,8 @@ const errorController = require("./controllers/error");
 const sequelise = require("./util/database.js");
 const Product = require("./models/product");
 const User = require("./models/user");
+const Cart = require("./models/cart");
+const CartItem = require("./models/cart-item");
 
 const app = express();
 
@@ -35,8 +37,18 @@ app.use(shopRoutes);
 app.use(errorController.get404);
 
 // creating association
+
+// user and product
 Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
 User.hasMany(Product); // this step is optional - but it creates bidirections association
+
+//user and cart
+User.hasOne(Cart);
+Cart.belongsTo(User);
+
+//cart, cart-item and products
+Cart.belongsToMany(Product, { through: CartItem });
+Product.belongsToMany(Cart, { through: CartItem });
 
 sequelise
   // never use force in production - we are using it because product schema is already created.
@@ -58,8 +70,9 @@ sequelise
 
     return user; // any value return in then block is a promise
   })
-  .then((user) => {
-    //console.log({ user });
-    app.listen(3000);
-  })
+  // .then((user) => {
+  //   // creating cart on load
+  //   return user.createCart();
+  // })
+  .then((cart) => app.listen(3000))
   .catch((err) => console.log({ err }));
