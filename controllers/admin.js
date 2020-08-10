@@ -13,9 +13,27 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  const product = new Product(null, title, imageUrl, description, price);
-  product.save();
-  res.redirect("/");
+  // association in app.js will provide createProduct method for a user
+  req.user
+    .createProduct({
+      title: title,
+      price: price,
+      imageUrl: imageUrl,
+      description: description,
+    })
+    // Product.create({
+    //   title: title,
+    //   price: price,
+    //   imageUrl: imageUrl,
+    //   description: description,
+    //   // this is a one way of setting foreign key
+    //   userId: req.user.id,
+    // })
+    .then(() => {
+      res.redirect("/admin/products");
+      console.log("Create product");
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.getEditProduct = (req, res, next) => {
@@ -25,17 +43,21 @@ exports.getEditProduct = (req, res, next) => {
     return res.redirect("/");
   }
   const prodId = req.params.productId;
-  Product.findById(prodId, (product) => {
-    if (!product) {
-      return res.redirect("/");
-    }
-    res.render("admin/edit-product", {
-      pageTitle: "Add Product",
-      path: "/admin/edit-product",
-      editing: editMode,
-      product,
-    });
-  });
+  req.user
+    .getProducts({ where: { id: prodId } }) // this returns an array
+    //Product.findByPk(prodId) // this returns a single obj
+    .then((products) => {
+      if (products.length < 1) {
+        return res.redirect("/");
+      }
+      res.render("admin/edit-product", {
+        pageTitle: "Add Product",
+        path: "/admin/edit-product",
+        editing: editMode,
+        product: products[0],
+      });
+    })
+    .catch((err) => console.log(err));
 };
 
 // update the product in product.json - post call because we will have product details in the request
@@ -47,24 +69,44 @@ exports.postEditProduct = (req, res, next) => {
   const description = reqData.description;
   const price = reqData.price;
 
-  const product = new Product(pId, title, imageUrl, description, price);
-  console.log({ product });
-  product.save();
-  res.redirect("/products");
+  Product.findByPk(pId)
+    .then((prod) => {
+      prod.title = title;
+      prod.imageUrl = imageUrl;
+      prod.description = description;
+      prod.price = price;
+      // return a promise which is handle in below then block, catch will catch error for both the promise
+      return prod.save();
+    })
+    .then(() => {
+      res.redirect("/products");
+      console.log("PRODUCT EDITED");
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll((products) => {
-    res.render("admin/products", {
-      prods: products,
-      pageTitle: "Admin Products",
-      path: "/admin/products",
-    });
-  });
+  req.user.getProducts()
+  //Product.findAll()
+    .then((products) => {
+      res.render("admin/products", {
+        prods: products,
+        pageTitle: "Admin Products",
+        path: "/admin/products",
+      });
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.postDeleteProduct = (req, res, next) => {
   const pId = req.body.productId;
-  Product.deleteById(pId);
-  res.redirect("/products");
+  Product.findByPk(pId)
+    .then((product) => {
+      return product.destroy();
+    })
+    .then(() => {
+      res.redirect("/products");
+      console.log("PRODUCT DELETED");
+    })
+    .catch((e) => console.log(e));
 };
