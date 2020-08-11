@@ -23,29 +23,28 @@ exports.postAddProduct = (req, res, next) => {
     .catch((err) => console.log(err));
 };
 
-// exports.getEditProduct = (req, res, next) => {
-//   // query params
-//   const editMode = req.query.edit;
-//   if (!editMode) {
-//     return res.redirect("/");
-//   }
-//   const prodId = req.params.productId;
-//   req.user
-//     .getProducts({ where: { id: prodId } }) // this returns an array
-//     //Product.findByPk(prodId) // this returns a single obj
-//     .then((products) => {
-//       if (products.length < 1) {
-//         return res.redirect("/");
-//       }
-//       res.render("admin/edit-product", {
-//         pageTitle: "Add Product",
-//         path: "/admin/edit-product",
-//         editing: editMode,
-//         product: products[0],
-//       });
-//     })
-//     .catch((err) => console.log(err));
-// };
+exports.getEditProduct = (req, res, next) => {
+  // query params
+  const editMode = req.query.edit;
+  if (!editMode) {
+    return res.redirect("/");
+  }
+  const prodId = req.params.productId;
+  Product.findByPk(prodId)
+    .then((product) => {
+      if (!product) {
+        return res.redirect("/");
+      }
+
+      res.render("admin/edit-product", {
+        pageTitle: "Add Product",
+        path: "/admin/edit-product",
+        editing: editMode,
+        product,
+      });
+    })
+    .catch((err) => console.log(err));
+};
 
 // update the product in product.json - post call because we will have product details in the request
 exports.postEditProduct = (req, res, next) => {
@@ -56,15 +55,9 @@ exports.postEditProduct = (req, res, next) => {
   const description = reqData.description;
   const price = reqData.price;
 
-  Product.findByPk(pId)
-    .then((prod) => {
-      prod.title = title;
-      prod.imageUrl = imageUrl;
-      prod.description = description;
-      prod.price = price;
-      // return a promise which is handle in below then block, catch will catch error for both the promise
-      return prod.save();
-    })
+  const product = new Product(title, price, description, imageUrl, pId);
+  product
+    .save()
     .then(() => {
       res.redirect("/products");
       console.log("PRODUCT EDITED");
@@ -73,8 +66,7 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  req.user
-    .getProducts()
+  Product.fetchAll()
     //Product.findAll()
     .then((products) => {
       res.render("admin/products", {
@@ -88,10 +80,7 @@ exports.getProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   const pId = req.body.productId;
-  Product.findByPk(pId)
-    .then((product) => {
-      return product.destroy();
-    })
+  Product.deleteById(pId)
     .then(() => {
       res.redirect("/products");
       console.log("PRODUCT DELETED");

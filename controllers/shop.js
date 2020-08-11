@@ -1,7 +1,7 @@
 const Product = require("../models/product");
 
 exports.getProducts = (req, res, next) => {
-  Product.findAll()
+  Product.fetchAll()
     .then((products) => {
       res.render("shop/product-list", {
         prods: products,
@@ -16,19 +16,19 @@ exports.getProduct = (req, res, next) => {
   // param name should same as the name used in route
   const prodId = req.params.productId;
   //find all always returns an array
-  Product.findAll({ where: { id: prodId } })
+  Product.findByPk(prodId)
     .then((products) => {
       res.render("shop/product-detail.ejs", {
-        pageTitle: products[0].title,
+        pageTitle: products.title,
         path: `/products`,
-        product: products[0],
+        product: products,
       });
     })
     .catch((err) => console.log(err));
 };
 
 exports.getIndex = (req, res, next) => {
-  Product.findAll()
+  Product.fetchAll()
     .then((products) => {
       res.render("shop/index", {
         prods: products,
