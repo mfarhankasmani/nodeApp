@@ -80,31 +80,14 @@ exports.postCardDeleteProduct = (req, res, next) => {
 exports.postOrders = (req, res, next) => {
   let fetchCart;
   req.user
-    .getCart()
-    .then((cart) => {
-      fetchCart = cart;
-      return cart.getProducts();
-    })
-    .then((products) => {
-      req.user.createOrder().then((order) => {
-        return order.addProduct(
-          products.map((product) => {
-            product.orderItem = { quantity: product.cartItem.quantity };
-            return product;
-          })
-        );
-      });
-    })
-    .then(() => {
-      return fetchCart.setProducts(null);
-    })
+    .addOrder()
     .then(() => res.redirect("/orders"))
     .catch((err) => console.log(err));
 };
 
 exports.getOrders = (req, res, next) => {
   req.user
-    .getOrders({ include: ["products"] }) // get the associated products with orders
+    .getOrders() 
     .then((orders) => {
       res.render("shop/orders", {
         path: "/orders",
