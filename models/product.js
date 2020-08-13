@@ -1,6 +1,10 @@
 const { ObjectId } = require("mongodb");
 const { getDb } = require("../util/database");
 
+const productsCollection = () => {
+  const db = getDb();
+  return db.collection("products");
+};
 class Product {
   // storing user id reference to product model
   constructor(title, price, description, imageUrl, id, userId) {
@@ -13,17 +17,15 @@ class Product {
   }
 
   save() {
-    const db = getDb();
     let dbOp;
     if (this._id) {
       // then update the record
-      dbOp = db
-        .collection("products")
+      dbOp = productsCollection()
         // update operation in mongoDb
         .updateOne({ _id: this._id }, { $set: this });
     } else {
       // insert the record
-      dbOp = db.collection("products").insertOne(this);
+      dbOp = productsCollection().insertOne(this);
     }
     return dbOp
       .then(() => {
@@ -35,10 +37,8 @@ class Product {
   }
 
   static fetchAll() {
-    const db = getDb();
     // fetching all the products -- suitable for small amount of data
-    return db
-      .collection("products")
+    return productsCollection()
       .find()
       .toArray()
       .then((products) => {
@@ -50,10 +50,8 @@ class Product {
   }
 
   static findByPk(prodId) {
-    const db = getDb();
     return (
-      db
-        .collection("products")
+      productsCollection()
         // id's are not stored in string format
         .find({ _id: new ObjectId(prodId) })
         .next()
@@ -67,9 +65,7 @@ class Product {
   }
 
   static deleteById(prodId) {
-    const db = getDb();
-    return db
-      .collection("products")
+    return productsCollection
       .deleteOne({ _id: new ObjectId(prodId) })
       .then(() => {
         console.log("Successfully deleted");
@@ -80,4 +76,5 @@ class Product {
   }
 }
 
-module.exports = Product;
+exports.productsCollection = productsCollection;
+exports.Product = Product;

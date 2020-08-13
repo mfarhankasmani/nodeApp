@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 
 const errorController = require("./controllers/error");
 const { mongoConnect } = require("./util/database");
-const User = require("./models/user");
+const { User } = require("./models/user");
 
 const app = express();
 
@@ -22,7 +22,7 @@ app.use((req, res, next) => {
   User.findByPk("5f34f58fec70eb1808197b89")
     .then((user) => {
       // creating new parameter on req - user we are storing is a sequelize object
-      req.user = user;
+      req.user = new User(user.name, user.email, user.cart, user._id);
       next();
     })
     .catch((err) => console.log(err));

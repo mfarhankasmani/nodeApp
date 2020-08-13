@@ -1,20 +1,80 @@
 const { getDb } = require("../util/database");
 const { ObjectId } = require("mongodb");
+const { productsCollection } = require("./product");
 
+const usersCollection = () => {
+  const db = getDb();
+  return db.collection("users");
+};
+
+// adding cart to user
 class User {
-  constructor(username, email) {
-    (this.name = username), (this.email = email);
+  constructor(username, email, cart, id) {
+    this.name = username;
+    this.email = email;
+    this.cart = cart; // it is an object with items array {items:[]}
+    this._id = id ? new ObjectId(id) : undefined;
   }
 
   save() {
-    const db = getDb();
-    return db.collection("users").insertOne(this);
+    return usersCollection().insertOne(this);
   }
 
+  addToCart(productId) {
+    const updateCartItems = [...this.cart.items];
+
+    const cartProductIndex = this.cart.items.findIndex((cp) => {
+      return cp.productId.toString() == productId.toString();
+    });
+
+    if (cartProductIndex >= 0) {
+      updateCartItems[cartProductIndex].quantity =
+        this.cart.items[cartProductIndex].quantity + 1;
+    } else {
+      updateCartItems.push({ productId: new ObjectId(productId), quantity: 1 });
+    }
+
+    return usersCollection().updateOne(
+      { _id: this._id },
+      { $set: { cart: { items: updateCartItems } } }
+    );
+  }
+
+  getCart() {
+    // this.cart is only have productIds. hence we need to transform the data to populate product details
+    const productIds = this.cart.items.map((item) => item.productId);
+    return productsCollection()
+      .find({ _id: { $in: productIds } })
+      .toArray()
+      .then((products) => {
+        // merging data from products and users collection
+        return products.map((product) => {
+          return {
+            ...product,
+            quantity: this.cart.items.find(
+              (item) => item.productId.toString() === product._id.toString()
+            ).quantity,
+          };
+        });
+      })
+      .catch((err) => console.log("Unable to getCart", { err }));
+  }
+
+  deleteItemFromCart(productId) {
+    const updateCartItems = this.cart.items.filter(
+      (item) => item.productId.toString() !== productId.toString()
+    );
+
+    return usersCollection().updateOne(
+      { _id: this._id },
+      { $set: { cart: { items: updateCartItems } } }
+    );
+    
+  }
   static findByPk(userId) {
-    const db = getDb();
-    return db.collection("users").findOne({ _id: new ObjectId(userId) });
+    return usersCollection().findOne({ _id: new ObjectId(userId) });
   }
 }
 
-module.exports = User;
+exports.usersCollection = usersCollection;
+exports.User = User;
