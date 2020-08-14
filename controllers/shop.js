@@ -41,12 +41,13 @@ exports.getIndex = (req, res, next) => {
 
 exports.getCart = (req, res, next) => {
   req.user
-    .getCart()
-    .then((products) => {
+    .populate("cart.items.productId")
+    .execPopulate() // populate does not return promise hence chaining with execPopulate
+    .then((user) => {
       res.render("shop/cart", {
         path: "/cart",
         pageTitle: "Your Cart",
-        products,
+        products: user.cart.items,
       });
     })
     .catch((err) => console.log(err));
@@ -69,7 +70,7 @@ exports.postCart = (req, res, next) => {
 exports.postCardDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
   req.user
-    .deleteItemFromCart(prodId)
+    .removeFromCart(prodId)
     .then(() => {
       console.log("Item deleted");
       res.redirect("/cart");
@@ -87,7 +88,7 @@ exports.postOrders = (req, res, next) => {
 
 exports.getOrders = (req, res, next) => {
   req.user
-    .getOrders() 
+    .getOrders()
     .then((orders) => {
       res.render("shop/orders", {
         path: "/orders",
