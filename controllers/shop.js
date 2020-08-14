@@ -1,7 +1,7 @@
 const { Product } = require("../models/product");
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll()
+  Product.find()
     .then((products) => {
       res.render("shop/product-list", {
         prods: products,
@@ -16,7 +16,7 @@ exports.getProduct = (req, res, next) => {
   // param name should same as the name used in route
   const prodId = req.params.productId;
   //find all always returns an array
-  Product.findByPk(prodId)
+  Product.findById(prodId)
     .then((products) => {
       res.render("shop/product-detail.ejs", {
         pageTitle: products.title,
@@ -28,7 +28,7 @@ exports.getProduct = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  Product.fetchAll()
+  Product.find()
     .then((products) => {
       res.render("shop/index", {
         prods: products,
@@ -55,7 +55,7 @@ exports.getCart = (req, res, next) => {
 exports.postCart = (req, res, next) => {
   // name used in html (on input)
   const prodId = req.body.productId;
-  Product.findByPk(prodId)
+  Product.findById(prodId)
     .then((product) => {
       return req.user.addToCart(product._id);
     })

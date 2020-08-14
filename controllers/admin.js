@@ -13,14 +13,7 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  const product = new Product(
-    title,
-    price,
-    description,
-    imageUrl,
-    null,
-    req.user._id
-  );
+  const product = new Product({ title, price, description, imageUrl, userId: req.user });
   product
     .save()
     .then(() => {
@@ -37,7 +30,7 @@ exports.getEditProduct = (req, res, next) => {
     return res.redirect("/");
   }
   const prodId = req.params.productId;
-  Product.findByPk(prodId)
+  Product.findById(prodId)
     .then((product) => {
       if (!product) {
         return res.redirect("/");
@@ -61,10 +54,14 @@ exports.postEditProduct = (req, res, next) => {
   const imageUrl = reqData.imageUrl;
   const description = reqData.description;
   const price = reqData.price;
-
-  const product = new Product(title, price, description, imageUrl, pId);
-  product
-    .save()
+  Product.findById(pId)
+    .then((product) => {
+      product.title = title;
+      product.imageUrl = imageUrl;
+      product.price = price;
+      product.description = description;
+      return product.save();
+    })
     .then(() => {
       res.redirect("/products");
       console.log("PRODUCT EDITED");
@@ -73,8 +70,9 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll()
-    //Product.findAll()
+  Product.find()
+    // .select('title price -_id') // select only provided fields from the product collection (-_id - removes id for returned result)
+    //.populate('userId', 'name') // populate details from user collection
     .then((products) => {
       res.render("admin/products", {
         prods: products,
@@ -87,7 +85,7 @@ exports.getProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   const pId = req.body.productId;
-  Product.deleteById(pId)
+  Product.findByIdAndRemove(pId)
     .then(() => {
       res.redirect("/products");
       console.log("PRODUCT DELETED");
