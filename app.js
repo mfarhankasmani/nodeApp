@@ -44,9 +44,11 @@ app.use(
 );
 
 app.use((req, res, next) => {
-  User.findById("5f367b3db198681be575fa12")
+  if (!req.session.user) {
+    return next();
+  }
+  User.findById(req.session.user._id)
     .then((user) => {
-      // creating new parameter on req - user we are storing is a sequelize object
       req.user = user;
       next();
     })

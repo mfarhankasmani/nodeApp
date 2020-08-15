@@ -1,3 +1,5 @@
+const { User } = require("../models/user");
+
 exports.getLogin = (req, res, next) => {
   res.render("auth/login", {
     path: "/login",
@@ -7,7 +9,23 @@ exports.getLogin = (req, res, next) => {
 };
 
 exports.postLogin = (req, res, next) => {
-  //Setting session data - this will store session in memory
-  req.session.isLoggedIn = true;
-  res.redirect("/");
+  User.findById("5f367b3db198681be575fa12")
+    .then((user) => {
+      req.session.isLoggedIn = true;
+      req.session.user = user;
+      // only redirect if data is saved succesfully
+      req.session.save(() => {
+        console.log("Login Successful");
+        res.redirect("/");
+      });
+    })
+    .catch((err) => console.log(err));
+};
+
+exports.postLogout = (req, res, next) => {
+  // delete the session
+  req.session.destroy(() => {
+    console.log("Logout Successful");
+    res.redirect("/");
+  });
 };
