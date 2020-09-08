@@ -37,8 +37,6 @@ exports.getIndex = (req, res, next) => {
         prods: products,
         pageTitle: "Shop",
         path: "/",
-        isAuthenticated: req.session.isLoggedIn,
-        csrfToken: req.csrfToken() // token is provided by csrf token package
       });
     })
     .catch((err) => console.log("getIndex", err));
@@ -94,7 +92,7 @@ exports.postOrders = (req, res, next) => {
       });
       const order = new Order({
         user: {
-          name: req.user.name,
+          email: req.user.email,
           userId: req.user,
         },
         products,
