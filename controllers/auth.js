@@ -17,15 +17,35 @@ exports.getSignup = (req, res, next) => {
   });
 };
 exports.postLogin = (req, res, next) => {
-  User.findById("5f367b3db198681be575fa12")
+  // signIn using email address
+  const email = req.body.email;
+  const password = req.body.password;
+
+  User.findOne({ email: email })
     .then((user) => {
-      req.session.isLoggedIn = true;
-      req.session.user = user;
-      // only redirect if data is saved succesfully
-      req.session.save(() => {
-        console.log("Login Successful");
-        res.redirect("/");
-      });
+      if (!user) {
+        return res.redirect("/login");
+      }
+      // comparing password from ui with password in database
+      bcrypt
+        .compare(password, user.password)
+        .then((doMatch) => {
+          if (doMatch) {
+            req.session.isLoggedIn = true;
+            req.session.user = user;
+            // only redirect if data is saved succesfully
+            return req.session.save(() => {
+              console.log("Login Successful");
+              res.redirect("/");
+            });
+          }
+          console.log("Incorrect Password!!");
+          res.redirect("/login");
+        })
+        .catch((err) => {
+          console.log(err, "incorrect password!!");
+          res.redirect("/login");
+        });
     })
     .catch((err) => console.log(err));
 };
