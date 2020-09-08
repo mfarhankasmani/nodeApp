@@ -10,6 +10,9 @@ const MongoDBStore = require("connect-mongodb-session")(session);
 //token lib
 const csrf = require("csurf");
 
+//import connect flash
+const flash = require("connect-flash");
+
 const errorController = require("./controllers/error");
 const { User } = require("./models/user");
 
@@ -50,7 +53,8 @@ app.use(
 // after the session is created, add csrf protection
 // for all the post req, this package will look for the token
 app.use(csrfProtection);
-
+// add flash to middleware, so that it can be used any where in the application
+app.use(flash());
 app.use((req, res, next) => {
   if (!req.session.user) {
     return next();
