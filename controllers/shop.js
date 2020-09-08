@@ -38,6 +38,7 @@ exports.getIndex = (req, res, next) => {
         pageTitle: "Shop",
         path: "/",
         isAuthenticated: req.session.isLoggedIn,
+        csrfToken: req.csrfToken() // token is provided by csrf token package
       });
     })
     .catch((err) => console.log("getIndex", err));
