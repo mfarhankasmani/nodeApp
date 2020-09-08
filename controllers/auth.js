@@ -1,4 +1,5 @@
 const { User } = require("../models/user");
+const bcrypt = require("bcryptjs");
 
 exports.getLogin = (req, res, next) => {
   res.render("auth/login", {
@@ -29,7 +30,38 @@ exports.postLogin = (req, res, next) => {
     .catch((err) => console.log(err));
 };
 
-exports.postSignup = (req, res, next) => {};
+// on post sign up we will add the new user to the database
+exports.postSignup = (req, res, next) => {
+  //values are retriev from req, value name is initiated in views
+  const email = req.body.email;
+  const password = req.body.password;
+  const confirmPassword = req.body.confirmPassword;
+  // TODO - validate above values
+
+  // check for email is already registered - can be done using index in mongoDB or by finding email in database
+  // checking email in db
+  User.findOne({ email: email })
+    .then((userDoc) => {
+      if (userDoc) {
+        return res.redirect("/signup");
+      }
+      // encrypting password using bcrytjs hash method
+      bcrypt
+        .hash(password, 12)
+        .then((hashPassword) => {
+          if (password === confirmPassword) {
+            const user = new User({
+              email,
+              password: hashPassword,
+              cart: { item: [] },
+            });
+            return user.save();
+          }
+        })
+        .then(() => res.redirect("/login"));
+    })
+    .catch((err) => console.log(err, "error checking email address"));
+};
 
 exports.postLogout = (req, res, next) => {
   // delete the session
