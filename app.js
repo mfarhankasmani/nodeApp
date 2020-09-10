@@ -7,6 +7,12 @@ const session = require("express-session");
 // passing session to returned a constructor fuction
 const MongoDBStore = require("connect-mongodb-session")(session);
 
+//token lib
+const csrf = require("csurf");
+
+//import connect flash
+const flash = require("connect-flash");
+
 const errorController = require("./controllers/error");
 const { User } = require("./models/user");
 
@@ -19,6 +25,8 @@ const store = new MongoDBStore({
   uri: MONGODB_URI,
   collection: "sessions",
 });
+
+const csrfProtection = csrf();
 
 app.set("view engine", "ejs");
 app.set("views", "views");
@@ -42,7 +50,11 @@ app.use(
     store: store,
   })
 );
-
+// after the session is created, add csrf protection
+// for all the post req, this package will look for the token
+app.use(csrfProtection);
+// add flash to middleware, so that it can be used any where in the application
+app.use(flash());
 app.use((req, res, next) => {
   if (!req.session.user) {
     return next();
@@ -55,6 +67,13 @@ app.use((req, res, next) => {
     .catch((err) => console.log(err));
 });
 
+// adding middle ware for passing isAuthenticated, csrfToken to all the routes/views
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.isLoggedIn; // res.locals is use for passing local value to each views
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
+
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
@@ -63,20 +82,5 @@ app.use(errorController.get404);
 
 mongoose
   .connect(MONGODB_URI, { useUnifiedTopology: true, useNewUrlParser: true })
-  .then(() => {
-    // creating a user when there is no user
-    User.findOne().then((user) => {
-      if (!user) {
-        const user = new User({
-          name: "farhan",
-          email: "test@test",
-          cart: {
-            items: [],
-          },
-        });
-        user.save();
-      }
-    });
-    app.listen(3000);
-  })
+  .then(() => app.listen(3000))
   .catch((err) => console.log(err));

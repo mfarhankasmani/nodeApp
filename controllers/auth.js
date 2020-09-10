@@ -1,25 +1,101 @@
 const { User } = require("../models/user");
+const bcrypt = require("bcryptjs");
 
 exports.getLogin = (req, res, next) => {
+  let message = req.flash("error");
+  if (message.length > 0) {
+    message = message[0];
+  } else {
+    message = null;
+  }
   res.render("auth/login", {
     path: "/login",
     pageTitle: "Login",
-    isAuthenticated: req.session.isLoggedIn,
+    errorMessage: message,
   });
 };
 
+exports.getSignup = (req, res, next) => {
+  let message = req.flash("error");
+  if (message.length > 0) {
+    message = message[0];
+  } else {
+    message = null;
+  }
+  res.render("auth/signup", {
+    path: "/signup",
+    pageTitle: "Signup",
+    isAuthenticated: false,
+    errorMessage: message,
+  });
+};
 exports.postLogin = (req, res, next) => {
-  User.findById("5f367b3db198681be575fa12")
+  // signIn using email address
+  const email = req.body.email;
+  const password = req.body.password;
+
+  User.findOne({ email: email })
     .then((user) => {
-      req.session.isLoggedIn = true;
-      req.session.user = user;
-      // only redirect if data is saved succesfully
-      req.session.save(() => {
-        console.log("Login Successful");
-        res.redirect("/");
-      });
+      if (!user) {
+        req.flash("error", "Invalid email or password");
+        return res.redirect("/login");
+      }
+      // comparing password from ui with password in database
+      bcrypt
+        .compare(password, user.password)
+        .then((doMatch) => {
+          if (doMatch) {
+            req.session.isLoggedIn = true;
+            req.session.user = user;
+            // only redirect if data is saved succesfully
+            return req.session.save(() => {
+              console.log("Login Successful");
+              res.redirect("/");
+            });
+          }
+          req.flash("error", "Invalid email or password");
+          res.redirect("/login");
+        })
+        .catch((err) => {
+          console.log(err, "incorrect password!!");
+          res.redirect("/login");
+        });
     })
     .catch((err) => console.log(err));
+};
+
+// on post sign up we will add the new user to the database
+exports.postSignup = (req, res, next) => {
+  //values are retriev from req, value name is initiated in views
+  const email = req.body.email;
+  const password = req.body.password;
+  const confirmPassword = req.body.confirmPassword;
+  // TODO - validate above values
+
+  // check for email is already registered - can be done using index in mongoDB or by finding email in database
+  // checking email in db
+  User.findOne({ email: email })
+    .then((userDoc) => {
+      if (userDoc) {
+        req.flash("error", "Email is already registered");
+        return res.redirect("/signup");
+      }
+      // encrypting password using bcrytjs hash method
+      bcrypt
+        .hash(password, 12)
+        .then((hashPassword) => {
+          if (password === confirmPassword) {
+            const user = new User({
+              email,
+              password: hashPassword,
+              cart: { item: [] },
+            });
+            return user.save();
+          }
+        })
+        .then(() => res.redirect("/login"));
+    })
+    .catch((err) => console.log(err, "error checking email address"));
 };
 
 exports.postLogout = (req, res, next) => {
