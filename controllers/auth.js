@@ -1,5 +1,16 @@
 const { User } = require("../models/user");
 const bcrypt = require("bcryptjs");
+const nodemailer = require("nodemailer");
+const sendgridTransport = require("nodemailer-sendgrid-transport");
+
+const transporter = nodemailer.createTransport(
+  sendgridTransport({
+    auth: {
+      api_key:
+        "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",
+    },
+  })
+);
 
 exports.getLogin = (req, res, next) => {
   let message = req.flash("error");
@@ -93,7 +104,16 @@ exports.postSignup = (req, res, next) => {
             return user.save();
           }
         })
-        .then(() => res.redirect("/login"));
+        .then(() => {
+          res.redirect("/login");
+          // sending email is an async task, either we can wait by using then, or we can just continue
+          return transporter.sendMail({
+            to: email,
+            from: "farhan.kasmani@gmail.com",
+            subject: "Signup succeeded!",
+            html: "<h1>Sign up is successfully completed!!</h1>",
+          });
+        });
     })
     .catch((err) => console.log(err, "error checking email address"));
 };
