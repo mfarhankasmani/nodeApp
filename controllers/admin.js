@@ -66,21 +66,23 @@ exports.postEditProduct = (req, res, next) => {
   const price = reqData.price;
   Product.findById(pId)
     .then((product) => {
+      if (product.userId.toString() !== req.user._id.toString()) {
+        return res.redirect("/");
+      }
       product.title = title;
       product.imageUrl = imageUrl;
       product.price = price;
       product.description = description;
-      return product.save();
-    })
-    .then(() => {
-      res.redirect("/products");
-      console.log("PRODUCT EDITED");
+      product.save().then(() => {
+        res.redirect("/products");
+        console.log("PRODUCT EDITED");
+      });
     })
     .catch((err) => console.log(err));
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.find()
+  Product.find({ userId: req.user._id })
     // .select('title price -_id') // select only provided fields from the product collection (-_id - removes id for returned result)
     //.populate('userId', 'name') // populate details from user collection
     .then((products) => {
@@ -95,7 +97,7 @@ exports.getProducts = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   const pId = req.body.productId;
-  Product.findByIdAndRemove(pId)
+  Product.deleteOne({ _id: pId, userId: req.user._id })
     .then(() => {
       res.redirect("/products");
       console.log("PRODUCT DELETED");
