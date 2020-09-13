@@ -1,5 +1,5 @@
 const express = require("express");
-const { check } = require("express-validator");
+const { check, body } = require("express-validator");
 
 const authController = require("../controllers/auth");
 
@@ -10,16 +10,31 @@ router.get("/signup", authController.getSignup);
 router.post("/login", authController.postLogin);
 router.post(
   "/signup",
-  check("email")
-    .isEmail()
-    .withMessage("Please enter a valid email")
-    // Adding a custom rule
-    .custom((value, { req }) => {
-      if (value === "test@test.com") {
-        throw new Error("This email address is forbidden.");
+  [
+    check("email")
+      .isEmail()
+      .withMessage("Please enter a valid email")
+      // Adding a custom rule
+      .custom((value, { req }) => {
+        if (value === "test@test.com") {
+          throw new Error("This email address is forbidden.");
+        }
+        return true;
+      }),
+    // using default/generic error msg instead of repeating withmessage after each validation
+    body(
+      "password",
+      "Please enter a password with only number and text and at least 5 characters."
+    )
+      .isLength({ min: 4 })
+      .isAlphanumeric(),
+    body("confirmPassword").custom((value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error("Passwords have to match");
       }
       return true;
     }),
+  ],
   authController.postSignup
 );
 router.post("/logout", authController.postLogout);
