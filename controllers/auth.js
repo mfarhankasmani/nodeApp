@@ -48,34 +48,35 @@ exports.postLogin = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  User.findOne({ email: email })
-    .then((user) => {
-      if (!user) {
-        req.flash("error", "Invalid email or password");
-        return res.redirect("/login");
-      }
-      // comparing password from ui with password in database
-      bcrypt
-        .compare(password, user.password)
-        .then((doMatch) => {
-          if (doMatch) {
-            req.session.isLoggedIn = true;
-            req.session.user = user;
-            // only redirect if data is saved succesfully
-            return req.session.save(() => {
-              console.log("Login Successful");
-              res.redirect("/");
-            });
-          }
-          req.flash("error", "Invalid email or password");
-          res.redirect("/login");
-        })
-        .catch((err) => {
-          console.log(err, "incorrect password!!");
-          res.redirect("/login");
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.render("auth/login", {
+      path: "/login",
+      pageTitle: "Login",
+      errorMessage: errors.array()[0].msg,
+    });
+  }
+
+  // comparing password from ui with password in database
+  bcrypt
+    .compare(password, user.password)
+    .then((doMatch) => {
+      if (doMatch) {
+        req.session.isLoggedIn = true;
+        req.session.user = user;
+        // only redirect if data is saved succesfully
+        return req.session.save(() => {
+          console.log("Login Successful");
+          res.redirect("/");
         });
+      }
+      req.flash("error", "Invalid email or password");
+      res.redirect("/login");
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      console.log(err, "incorrect password!!");
+      res.redirect("/login");
+    })
 };
 
 // on post sign up we will add the new user to the database
@@ -94,35 +95,28 @@ exports.postSignup = (req, res, next) => {
   }
   // check for email is already registered - can be done using index in mongoDB or by finding email in database
   // checking email in db
-  User.findOne({ email: email })
-    .then((userDoc) => {
-      if (userDoc) {
-        req.flash("error", "Email is already registered");
-        return res.redirect("/signup");
-      }
-      // encrypting password using bcrytjs hash method
-      bcrypt
-        .hash(password, 12)
-        .then((hashPassword) => {
-          if (password === confirmPassword) {
-            const user = new User({
-              email,
-              password: hashPassword,
-              cart: { item: [] },
-            });
-            return user.save();
-          }
-        })
-        .then(() => {
-          res.redirect("/login");
-          // sending email is an async task, either we can wait by using then, or we can just continue
-          return transporter.sendMail({
-            to: email,
-            from: "farhan.kasmani@gmail.com",
-            subject: "Signup succeeded!",
-            html: "<h1>Sign up is successfully completed!!</h1>",
-          });
+  // encrypting password using bcrytjs hash method
+  bcrypt
+    .hash(password, 12)
+    .then((hashPassword) => {
+      if (password === confirmPassword) {
+        const user = new User({
+          email,
+          password: hashPassword,
+          cart: { item: [] },
         });
+        return user.save();
+      }
+    })
+    .then(() => {
+      res.redirect("/login");
+      // sending email is an async task, either we can wait by using then, or we can just continue
+      return transporter.sendMail({
+        to: email,
+        from: "farhan.kasmani@gmail.com",
+        subject: "Signup succeeded!",
+        html: "<h1>Sign up is successfully completed!!</h1>",
+      });
     })
     .catch((err) => console.log(err, "error checking email address"));
 };
