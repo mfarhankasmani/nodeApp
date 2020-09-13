@@ -15,16 +15,12 @@ router.post(
     body("email")
       .isEmail()
       .withMessage("Please enter a valid email")
-      .custom((value, { req }) => {
-        return User.findOne({ email: value }).then((user) => {
-          if (!user) {
-            return Promise.reject("Invalid email or password");
-          }
-        });
-      }),
+      //sanitized the data
+      .normalizeEmail(),
     body("password", "Please enter a valid password")
       .isLength({ min: 4 })
-      .isAlphanumeric(),
+      .isAlphanumeric()
+      .trim(),
   ],
   authController.postLogin
 );
@@ -46,20 +42,24 @@ router.post(
             return Promise.reject("Email is already registered");
           }
         });
-      }),
+      })
+      .normalizeEmail(),
     // using default/generic error msg instead of repeating withmessage after each validation
     body(
       "password",
       "Please enter a password with only number and text and at least 5 characters."
     )
       .isLength({ min: 4 })
-      .isAlphanumeric(),
-    body("confirmPassword").custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error("Passwords have to match");
-      }
-      return true;
-    }),
+      .isAlphanumeric()
+      .trim(),
+    body("confirmPassword")
+      .custom((value, { req }) => {
+        if (value !== req.body.password) {
+          throw new Error("Passwords have to match");
+        }
+        return true;
+      })
+      .trim(),
   ],
   authController.postSignup
 );

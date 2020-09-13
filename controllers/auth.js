@@ -26,6 +26,8 @@ exports.getLogin = (req, res, next) => {
     path: "/login",
     pageTitle: "Login",
     errorMessage: message,
+    oldInput: { email: "", password: "" },
+    validationErrors: [],
   });
 };
 
@@ -41,6 +43,8 @@ exports.getSignup = (req, res, next) => {
     pageTitle: "Signup",
     isAuthenticated: false,
     errorMessage: message,
+    oldInput: { email: "", password: "", confirmPassword: "" },
+    validationErrors: [],
   });
 };
 exports.postLogin = (req, res, next) => {
@@ -50,33 +54,52 @@ exports.postLogin = (req, res, next) => {
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.render("auth/login", {
+    return res.status(422).render("auth/login", {
       path: "/login",
       pageTitle: "Login",
       errorMessage: errors.array()[0].msg,
+      oldInput: { email, password },
+      validationErrors: errors.array(),
     });
   }
-
-  // comparing password from ui with password in database
-  bcrypt
-    .compare(password, user.password)
-    .then((doMatch) => {
-      if (doMatch) {
-        req.session.isLoggedIn = true;
-        req.session.user = user;
-        // only redirect if data is saved succesfully
-        return req.session.save(() => {
-          console.log("Login Successful");
-          res.redirect("/");
+  User.findOne({ email: email })
+    .then((user) => {
+      if (!user) {
+        return res.status(422).render("auth/login", {
+          path: "/login",
+          pageTitle: "Login",
+          errorMessage: "Invalid email or password",
+          oldInput: { email, password },
+          validationErrors: [],
         });
       }
-      req.flash("error", "Invalid email or password");
-      res.redirect("/login");
+      // comparing password from ui with password in database
+      bcrypt
+        .compare(password, user.password)
+        .then((doMatch) => {
+          if (doMatch) {
+            req.session.isLoggedIn = true;
+            req.session.user = user;
+            // only redirect if data is saved succesfully
+            return req.session.save(() => {
+              console.log("Login Successful");
+              res.redirect("/");
+            });
+          }
+          return res.status(422).render("auth/login", {
+            path: "/login",
+            pageTitle: "Login",
+            errorMessage: "Invalid email or password",
+            oldInput: { email, password },
+            validationErrors: [],
+          });
+        })
+        .catch((err) => {
+          console.log(err, "incorrect password!!");
+          res.redirect("/login");
+        });
     })
-    .catch((err) => {
-      console.log(err, "incorrect password!!");
-      res.redirect("/login");
-    })
+    .catch((err) => console.log(err));
 };
 
 // on post sign up we will add the new user to the database
@@ -91,6 +114,8 @@ exports.postSignup = (req, res, next) => {
       path: "/signup",
       pageTitle: "Signup",
       errorMessage: errors.array()[0].msg,
+      oldInput: { email, password, confirmPassword },
+      validationErrors: errors.array(),
     });
   }
   // check for email is already registered - can be done using index in mongoDB or by finding email in database
