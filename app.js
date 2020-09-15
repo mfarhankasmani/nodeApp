@@ -55,6 +55,13 @@ app.use(
 app.use(csrfProtection);
 // add flash to middleware, so that it can be used any where in the application
 app.use(flash());
+
+app.use((req, res, next) => {
+  res.locals.isAuthenticated = req.session.isLoggedIn; // res.locals is use for passing local value to each views
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
+
 app.use((req, res, next) => {
   if (!req.session.user) {
     return next();
@@ -68,16 +75,12 @@ app.use((req, res, next) => {
       next();
     })
     .catch((err) => {
-      throw new Error(err);
+      // throwing error for sync functionality
+      next(new Error(err));
     });
 });
 
 // adding middle ware for passing isAuthenticated, csrfToken to all the routes/views
-app.use((req, res, next) => {
-  res.locals.isAuthenticated = req.session.isLoggedIn; // res.locals is use for passing local value to each views
-  res.locals.csrfToken = req.csrfToken();
-  next();
-});
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
@@ -88,7 +91,12 @@ app.get("/500", errorController.get500);
 app.use(errorController.get404);
 // error handling middleware -- incase of multiple error handling middleware, node will execute them sequencially
 app.use((error, req, res, next) => {
-  res.redirect("/500");
+  //res.redirect("/500");
+  res.status(500).render("500", {
+    pageTitle: "Error!",
+    path: "/500",
+    isAuthenticated: req.session.isLoggedIn,
+  });
 });
 mongoose
   .connect(MONGODB_URI, { useUnifiedTopology: true, useNewUrlParser: true })
