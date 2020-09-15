@@ -61,10 +61,15 @@ app.use((req, res, next) => {
   }
   User.findById(req.session.user._id)
     .then((user) => {
+      if (!user) {
+        return next();
+      }
       req.user = user;
       next();
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      throw new Error(err);
+    });
 });
 
 // adding middle ware for passing isAuthenticated, csrfToken to all the routes/views
@@ -78,8 +83,13 @@ app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 
-app.use(errorController.get404);
+app.get("/500", errorController.get500);
 
+app.use(errorController.get404);
+// error handling middleware -- incase of multiple error handling middleware, node will execute them sequencially
+app.use((error, req, res, next) => {
+  res.redirect("/500");
+});
 mongoose
   .connect(MONGODB_URI, { useUnifiedTopology: true, useNewUrlParser: true })
   .then(() => app.listen(3000))
