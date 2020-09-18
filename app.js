@@ -12,6 +12,7 @@ const csrf = require("csurf");
 
 //import connect flash
 const flash = require("connect-flash");
+const multer = require("multer");
 
 const errorController = require("./controllers/error");
 const { User } = require("./models/user");
@@ -36,7 +37,22 @@ const shopRoutes = require("./routes/shop");
 const authRoutes = require("./routes/auth");
 const { collection } = require("./models/order");
 
+// multer file storage configuration
+const fileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "images");
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${new Date().toISOString()}-${file.originalname}`);
+  },
+});
+
+// bodyParser is used for extracting values from html page (URL encoded) - it can only extract text, file will not be supported.
 app.use(bodyParser.urlencoded({ extended: false }));
+
+//initialling multer for single file - this will store the images in images folder with a unique name
+app.use(multer({ storage: fileStorage }).single("image"));
+
 app.use(express.static(path.join(__dirname, "public")));
 // Creating session middleware - secret : client secret, resave : false (save only when something is changed on the session),
 // saveUninitialized: false (ensures that session is not stored where it is not required)
