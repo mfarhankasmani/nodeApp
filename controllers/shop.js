@@ -164,24 +164,33 @@ exports.getInvoice = (req, res, next) => {
       if (!order) {
         return next(new Error("No order found."));
       }
-      if (order.user.userId.toString() === req.user._id.toString()) {
+      if (order.user.userId.toString() !== req.user._id.toString()) {
         return next(new Error("Unauthorized"));
       }
       const invoiceName = `invoice-${orderId}.pdf`;
       const invoicePath = path.join("data", "invoices", invoiceName);
-      fs.readFile(invoicePath, (err, data) => {
-        if (err) {
-          console.log(err);
-          return next(err);
-        }
-        // this header will open the file in the browser
-        res.setHeader("Content-Type", "application/pdf");
-        // this header will set the file name as well as give the option of how to open the file
-        // attachment - will download
-        // inline - will open in browser
-        res.setHeader("Content-Disposition", `inline; filename=${invoiceName}`);
-        res.send(data);
-      });
+      // fs.readFile(invoicePath, (err, data) => {
+      //   if (err) {
+      //     console.log(err);
+      //     return next(err);
+      //   }
+      //   // this header will open the file in the browser
+      //   res.setHeader("Content-Type", "application/pdf");
+      //   // this header will set the file name as well as give the option of how to open the file
+      //   // attachment - will download
+      //   // inline - will open in browser
+      //   res.setHeader("Content-Disposition", `inline; filename=${invoiceName}`);
+      //   res.send(data);
+      // });
+
+      //Streaming file instead of preloading - improves servers response time and saves memory
+      const file = fs.createReadStream(invoicePath);
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `inline; filename=${invoiceName}`);
+
+      //pipe readable stream to response
+      file.pipe(res);
     })
     .catch((err) => {
       next(err);
