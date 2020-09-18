@@ -66,7 +66,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 //initialling multer for single file - this will store the images in images folder with a unique name
 app.use(multer({ storage: fileStorage, fileFilter }).single("image"));
 
+//statically serves the file
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/images", express.static(path.join(__dirname, "images")));
 // Creating session middleware - secret : client secret, resave : false (save only when something is changed on the session),
 // saveUninitialized: false (ensures that session is not stored where it is not required)
 // cookie can also be configured
