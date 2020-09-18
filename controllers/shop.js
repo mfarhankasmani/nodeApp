@@ -3,7 +3,8 @@ const path = require("path");
 
 const { Product } = require("../models/product");
 const Order = require("../models/order");
-const { ESRCH } = require("constants");
+
+const PDFDocument = require("pdfkit");
 
 exports.getProducts = (req, res, next) => {
   Product.find()
@@ -169,28 +170,32 @@ exports.getInvoice = (req, res, next) => {
       }
       const invoiceName = `invoice-${orderId}.pdf`;
       const invoicePath = path.join("data", "invoices", invoiceName);
-      // fs.readFile(invoicePath, (err, data) => {
-      //   if (err) {
-      //     console.log(err);
-      //     return next(err);
-      //   }
-      //   // this header will open the file in the browser
-      //   res.setHeader("Content-Type", "application/pdf");
-      //   // this header will set the file name as well as give the option of how to open the file
-      //   // attachment - will download
-      //   // inline - will open in browser
-      //   res.setHeader("Content-Disposition", `inline; filename=${invoiceName}`);
-      //   res.send(data);
-      // });
+      // Creating PDF on fly
+      const pdfDoc = new PDFDocument();
 
-      //Streaming file instead of preloading - improves servers response time and saves memory
-      const file = fs.createReadStream(invoicePath);
-
+      pdfDoc.pipe(fs.createWriteStream(invoicePath));
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", `inline; filename=${invoiceName}`);
+      pdfDoc.pipe(res);
 
-      //pipe readable stream to response
-      file.pipe(res);
+      pdfDoc.fontSize(26).text("Invoice", {
+        underline: true,
+      });
+      pdfDoc.text("-------------------------------");
+
+      let total = 0 ;
+      order.products.forEach((prod) => {
+        total += prod.quantity * prod.product.price;
+        pdfDoc
+          .fontSize(14)
+          .text(
+            `${prod.product.title} - ${prod.quantity} x $${prod.product.price}`
+          );
+      });
+
+      pdfDoc.text("-------------------------------");
+      pdfDoc.fontSize(20).text(`Total Price: $${total}`);
+      pdfDoc.end();
     })
     .catch((err) => {
       next(err);
