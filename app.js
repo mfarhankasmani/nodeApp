@@ -12,6 +12,7 @@ const csrf = require("csurf");
 
 //import connect flash
 const flash = require("connect-flash");
+const multer = require("multer");
 
 const errorController = require("./controllers/error");
 const { User } = require("./models/user");
@@ -36,8 +37,38 @@ const shopRoutes = require("./routes/shop");
 const authRoutes = require("./routes/auth");
 const { collection } = require("./models/order");
 
+// multer file storage configuration
+const fileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "images");
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${new Date().toISOString()}-${file.originalname}`);
+  },
+});
+
+//multer file filter
+const fileFilter = (req, file, cb) => {
+  if (
+    file.mimetype === "image/png" ||
+    file.mimetype === "image/jpg" ||
+    file.mimetype === "image/jpeg"
+  ) {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
+
+// bodyParser is used for extracting values from html page (URL encoded) - it can only extract text, file will not be supported.
 app.use(bodyParser.urlencoded({ extended: false }));
+
+//initialling multer for single file - this will store the images in images folder with a unique name
+app.use(multer({ storage: fileStorage, fileFilter }).single("image"));
+
+//statically serves the file
 app.use(express.static(path.join(__dirname, "public")));
+app.use("/images", express.static(path.join(__dirname, "images")));
 // Creating session middleware - secret : client secret, resave : false (save only when something is changed on the session),
 // saveUninitialized: false (ensures that session is not stored where it is not required)
 // cookie can also be configured
