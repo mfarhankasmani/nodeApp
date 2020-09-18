@@ -3,6 +3,7 @@ const path = require("path");
 
 const { Product } = require("../models/product");
 const Order = require("../models/order");
+const { ESRCH } = require("constants");
 
 exports.getProducts = (req, res, next) => {
   Product.find()
@@ -164,6 +165,12 @@ exports.getInvoice = (req, res, next) => {
       console.log(err);
       return next(err);
     }
+    // this header will open the file in the browser
+    res.setHeader("Content-Type", "application/pdf");
+    // this header will set the file name as well as give the option of how to open the file
+    // attachment - will download
+    // inline - will open in browser
+    res.setHeader("Content-Disposition", `inline; filename=${invoiceName}`);
     res.send(data);
   });
 };
