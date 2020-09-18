@@ -47,11 +47,24 @@ const fileStorage = multer.diskStorage({
   },
 });
 
+//multer file filter
+const fileFilter = (req, file, cb) => {
+  if (
+    file.mimetype === "image/png" ||
+    file.mimetype === "image/jpg" ||
+    file.mimetype === "image/jpeg"
+  ) {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
+
 // bodyParser is used for extracting values from html page (URL encoded) - it can only extract text, file will not be supported.
 app.use(bodyParser.urlencoded({ extended: false }));
 
 //initialling multer for single file - this will store the images in images folder with a unique name
-app.use(multer({ storage: fileStorage }).single("image"));
+app.use(multer({ storage: fileStorage, fileFilter }).single("image"));
 
 app.use(express.static(path.join(__dirname, "public")));
 // Creating session middleware - secret : client secret, resave : false (save only when something is changed on the session),
