@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 //pass correct private key - get it from stripe web site - below value is incorrect
 const stripe = require("stripe")(
-  "sk_test_51HT1APIMugLSp1zeNf92Dmmty7WBCQTvfLc38N5eYgLVVLPv403XITwoU1nb7F4p0eUPNi7f7NuUZiNbNkk55qKa008Km7YVrv"
+  "sk_test_51HT1APIMugLSp1zeNf92Dmmty7WBCQTvfLc38N5eYgLVVLPv403XITwoU1n"
 );
 
 const { Product } = require("../models/product");
